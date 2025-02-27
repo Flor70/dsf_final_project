@@ -1,0 +1,38 @@
+{
+  "city": "Madrid",
+  "data_source": "Open-Meteo Historical Weather API",
+  "analysis_date": "2025-02-27",
+  "years_analyzed": 5,
+  "total_days_analyzed": 55,
+  "temperature": {
+    "max": {
+      "average": 35.7,
+      "highest": 40.3,
+      "lowest": 30.2,
+      "std_dev": 2.7
+    },
+    "min": {
+      "average": 20.7,
+      "highest": 25.3,
+      "lowest": 15.8,
+      "std_dev": 2.4
+    }
+  },
+  "precipitation": {
+    "average_daily": 0.0,
+    "max_daily": 0.2,
+    "total": 0.4,
+    "rainy_days": 1,
+    "rainy_days_percentage": 1.8
+  },
+  "monthly_breakdown": [
+    {
+      "month": "July",
+      "days_with_data": 55,
+      "temperature_max_avg": 35.7,
+      "temperature_min_avg": 20.7,
+      "precipitation_avg": 0.0,
+      "rainy_days_percentage": 1.8
+    }
+  ]
+}
