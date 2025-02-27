@@ -47,3 +47,32 @@ The results are saved in two CSV files:
    ```bash
    git clone https://github.com/yourusername/flight-price-scraper.git
    cd flight-price-scraper
+
+---
+
+## Migration to SerpAPI Google Flights
+
+The project has been updated to use SerpAPI Google Flights as the primary flight data provider. This change allows for more comprehensive and accurate flight data.
+
+---
+
+## Recent Updates
+
+- **API Migration**: Transitioned to SerpAPI Google Flights as the primary flight data provider
+- **Enhanced UI**: Improved result display with better formatting and details
+- **Modular Architecture**: Refactored code for easier maintenance and API switching
+- **Search History**: Added tracking of previous searches
+
+---
+
+## Contributors
+
+- **Ario**
+- **Myrthe**
+- **Floriano**
+
+---
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.

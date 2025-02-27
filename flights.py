@@ -4,144 +4,431 @@ from datetime import datetime, timedelta
 import csv
 import time
 import os
+import json
+from serpapi.google_search import GoogleSearch
 
-# FlightLabs API configuration
-FLIGHTLABS_API_KEY = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJhdWQiOiI0IiwianRpIjoiZjFmY2ZlMDBmYjQ3MWNkZDA0ZTQ0ODE5MTdjMzcwMDMzZmIyYWU1MTBlNzY2ZmU2Y2VmNzBhMWFlYmRhMmNkOGZhNGU5MGQzZTEzNmI0MzMiLCJpYXQiOjE3NDA0MDgwNjMsIm5iZiI6MTc0MDQwODA2MywiZXhwIjoxNzcxOTQ0MDYzLCJzdWIiOiIyNDM4NiIsInNjb3BlcyI6W119.jGEdcsPiqHgA7crqZRZJ7bzKPaAbSAZply8toDccHIb9a8k_ewPHuq0f0d38eMgwXdHkGOEfu-j23X_gcDyhcw'
-AIRPORT_URL = 'https://www.goflightlabs.com/retrieveAirport'
-FLIGHTS_URL = 'https://www.goflightlabs.com/retrieveFlights'
 
-# Amadeus API configuration
-AMADEUS_API_KEY = "0ZgZJGkDTdlGQnHGewinTQZdtqLj12Jt"
-AMADEUS_API_SECRET = "RQhQWfh4tZfYuTOC"
-AMADEUS_TOKEN_URL = "https://test.api.amadeus.com/v1/security/oauth2/token"
-AMADEUS_API_URL = "https://test.api.amadeus.com/v1/analytics/itinerary-price-metrics"
+# SerpAPI Google Flights configuration
+SERPAPI_KEY = "941677836c67bebee8d9f3d0c2e43fe2644374fd67e6db64b6d0bf8b80c10b3f"
+SERPAPI_BASE_URL = "https://serpapi.com/search"
 
-# --- FlightLabs Functions ---
-def get_airport_ids(iata_code):
-    """Fetch skyId and entityId for an airport using IATA code."""
-    params = {'access_key': FLIGHTLABS_API_KEY, 'query': iata_code}
+
+# --- SerpAPI Google Flights Functions ---
+def fetch_flights_serpapi(origin, destination, departure_date, return_date=None, currency="USD", locale="en"):
+    """
+    Fetch flight data from SerpAPI Google Flights.
+    
+    Args:
+        origin (str): Origin airport code (IATA)
+        destination (str): Destination airport code (IATA)
+        departure_date (str): Departure date in YYYY-MM-DD format
+        return_date (str, optional): Return date in YYYY-MM-DD format. Defaults to None.
+        currency (str, optional): Currency code. Defaults to "USD".
+        locale (str, optional): Locale code. Defaults to "en".
+        save_raw_data (bool, optional): Whether to save raw API response to CSV. Defaults to False.
+        
+    Returns:
+        list: Formatted flight data
+    """
     try:
-        response = requests.get(AIRPORT_URL, params=params, timeout=10)
-        response.raise_for_status()
-        data = response.json()
-        for airport in data:
-            if (airport.get('navigation', {}).get('entityType') == 'AIRPORT' and 
-                airport.get('skyId') == iata_code):
-                return airport.get('skyId'), airport.get('entityId')
-        print(f"No matching airport found for {iata_code}")
-        return None, None
-    except requests.RequestException as e:
-        print(f"Error fetching airport data for {iata_code}: {str(e)}")
-        return None, None
-    except ValueError as e:
-        print(f"Invalid JSON response for {iata_code}: {str(e)}")
-        return None, None
+        # Prepare SerpAPI parameters
+        params = {
+            "engine": "google_flights",
+            "departure_id": origin,
+            "arrival_id": destination,
+            "outbound_date": departure_date,
+            "currency": currency,
+            "hl": locale,
+            "api_key": SERPAPI_KEY
+        }
+        
+        # Add return date if provided
+        if return_date:
+            params["return_date"] = return_date
+        
+        # Make API request
+        search = GoogleSearch(params)
+        results = search.get_dict()
+        
 
-def fetch_flights(origin_sky_id, dest_sky_id, origin_entity_id, dest_entity_id, depart_date, retries=3):
-    """Fetch flight data from FlightLabs retrieveFlights endpoint."""
-    params = {
-        'access_key': FLIGHTLABS_API_KEY, 'originSkyId': origin_sky_id, 'destinationSkyId': dest_sky_id,
-        'originEntityId': origin_entity_id, 'destinationEntityId': dest_entity_id, 'date': depart_date,
-        'adults': 1, 'currency': 'USD'
-    }
-    for attempt in range(retries):
-        try:
-            response = requests.get(FLIGHTS_URL, params=params, timeout=10)
-            response.raise_for_status()
-            data = response.json()
-            if 'itineraries' in data:
-                return data['itineraries']
-            else:
-                print(f"No flights found for {origin_sky_id} to {dest_sky_id} on {depart_date}")
-                return []
-        except requests.RequestException as e:
-            print(f"Attempt {attempt + 1}/{retries} failed for {depart_date}: {str(e)}")
-            if attempt < retries - 1:
-                time.sleep(2)
-            else:
-                return []
+        csv_filename = f"serpapi_raw_{origin}_{destination}_{departure_date}.csv"
+        save_serpapi_response_to_csv(results, csv_filename)
+        
+        # Format results
+        formatted_flights = format_serpapi_results(results)
+        return formatted_flights
+    
+    except Exception as e:
+        print(f"Error fetching flights from SerpAPI: {str(e)}")
+        return []
 
-def save_flights_to_csv(flights, filename='flights.csv'):
-    """Save FlightLabs flight data to a CSV file and return flight details."""
-    headers = ['Flight Number', 'Carrier', 'Date', 'Departure Time', 'Arrival Time', 'Price']
-    file_exists = pd.io.common.file_exists(filename)
+def format_serpapi_results(serpapi_data):
+    """
+    Format flight search results from SerpAPI Google Flights into a standardized format,
+    focusing on price information.
+    
+    Args:
+        serpapi_data (dict): Raw API response from SerpAPI
+        
+    Returns:
+        list: List of formatted flight dictionaries with price focus
+    """
+    formatted_flights = []
+    
+    # Check if we have valid data
+    if not serpapi_data or "error" in serpapi_data:
+        print(f"Error in SerpAPI response: {serpapi_data.get('error', 'Unknown error')}")
+        return []
+    
+    # Extract price insights if available
+    price_insights = serpapi_data.get("price_insights", {})
+    lowest_price = price_insights.get("lowest_price")
+    price_level = price_insights.get("price_level")
+    typical_price_range = price_insights.get("typical_price_range", [])
+    
+    # Process best flights first
+    best_flights = serpapi_data.get("best_flights", [])
+    if best_flights:
+        for flight in best_flights:
+            # Extract basic flight information
+            airline = flight.get('airline', 'Unknown')
+            price = flight.get('price', 'N/A')
+            total_duration = flight.get('total_duration', 0)
+            
+            # Format duration in hours and minutes
+            duration_formatted = f"{total_duration // 60}h {total_duration % 60}m" if total_duration else 'N/A'
+            
+            # Extract departure and arrival information from the first flight segment
+            flight_segments = flight.get('flights', [])
+            if flight_segments:
+                first_segment = flight_segments[0]
+                departure_airport = first_segment.get('departure_airport', {})
+                arrival_airport = first_segment.get('arrival_airport', {})
+                
+                # Extract departure and arrival times
+                departure_time = departure_airport.get('time', 'N/A')
+                arrival_time = arrival_airport.get('time', 'N/A')
+                
+                # Extract airport names and codes
+                origin_airport = f"{departure_airport.get('name', 'N/A')} ({departure_airport.get('id', 'N/A')})"
+                destination_airport = f"{arrival_airport.get('name', 'N/A')} ({arrival_airport.get('id', 'N/A')})"
+            else:
+                departure_time = 'N/A'
+                arrival_time = 'N/A'
+                origin_airport = 'N/A'
+                destination_airport = 'N/A'
+            
+            # Extract layover information
+            layovers = []
+            for layover in flight.get('layovers', []):
+                layover_info = f"{layover.get('name', 'Unknown')} ({layover.get('id', 'N/A')}) - {layover.get('duration', 0) // 60}h {layover.get('duration', 0) % 60}m"
+                layovers.append(layover_info)
+            
+            # Create formatted flight entry with price focus
+            formatted_flight = {
+                'airline': airline,
+                'price': price,
+                'price_level': price_level if price == lowest_price else None,
+                'typical_price_range': typical_price_range if typical_price_range else None,
+                'duration': duration_formatted,
+                'departure_time': departure_time,
+                'arrival_time': arrival_time,
+                'origin_airport': origin_airport,
+                'destination_airport': destination_airport,
+                'layovers': layovers,
+                'is_best_flight': True
+            }
+            
+            formatted_flights.append(formatted_flight)
+    
+    # Process other flights if available
+    other_flights = serpapi_data.get('other_flights', [])
+    for flight in other_flights:
+        # Extract basic flight information
+        airline = flight.get('airline', 'Unknown')
+        price = flight.get('price', 'N/A')
+        total_duration = flight.get('total_duration', 0)
+        
+        # Format duration in hours and minutes
+        duration_formatted = f"{total_duration // 60}h {total_duration % 60}m" if total_duration else 'N/A'
+        
+        # Extract departure and arrival information from the first flight segment
+        flight_segments = flight.get('flights', [])
+        if flight_segments:
+            first_segment = flight_segments[0]
+            departure_airport = first_segment.get('departure_airport', {})
+            arrival_airport = first_segment.get('arrival_airport', {})
+            
+            # Extract departure and arrival times
+            departure_time = departure_airport.get('time', 'N/A')
+            arrival_time = arrival_airport.get('time', 'N/A')
+            
+            # Extract airport names and codes
+            origin_airport = f"{departure_airport.get('name', 'N/A')} ({departure_airport.get('id', 'N/A')})"
+            destination_airport = f"{arrival_airport.get('name', 'N/A')} ({arrival_airport.get('id', 'N/A')})"
+        else:
+            departure_time = 'N/A'
+            arrival_time = 'N/A'
+            origin_airport = 'N/A'
+            destination_airport = 'N/A'
+        
+        # Extract layover information
+        layovers = []
+        for layover in flight.get('layovers', []):
+            layover_info = f"{layover.get('name', 'Unknown')} ({layover.get('id', 'N/A')}) - {layover.get('duration', 0) // 60}h {layover.get('duration', 0) % 60}m"
+            layovers.append(layover_info)
+        
+        # Create formatted flight entry with price focus
+        formatted_flight = {
+            'airline': airline,
+            'price': price,
+            'price_level': price_level if price == lowest_price else None,
+            'typical_price_range': typical_price_range if typical_price_range else None,
+            'duration': duration_formatted,
+            'departure_time': departure_time,
+            'arrival_time': arrival_time,
+            'origin_airport': origin_airport,
+            'destination_airport': destination_airport,
+            'layovers': layovers,
+            'is_best_flight': False
+        }
+        
+        formatted_flights.append(formatted_flight)
+    
+    # Sort flights by price (lowest first)
+    formatted_flights.sort(key=lambda x: float(str(x['price']).replace('$', '').replace(',', '')) if isinstance(x['price'], (int, float, str)) and str(x['price']).replace('$', '').replace(',', '').isdigit() else float('inf'))
+    
+    return formatted_flights
+
+def save_serpapi_flights_to_csv(flights, filename="serpapi_flights.csv"):
+    """
+    Save SerpAPI flight data to a CSV file and return flight details.
+    
+    Args:
+        flights (list): List of formatted flight dictionaries from SerpAPI
+        filename (str, optional): Output filename. Defaults to "serpapi_flights.csv".
+        
+    Returns:
+        list: List of flight details (airline, price, date)
+    """
+    headers = ['Airline', 'Price', 'Duration', 'Departure Date', 'Departure Time', 
+               'Arrival Date', 'Arrival Time', 'Origin Airport', 'Destination Airport', 'Layovers']
+    
+    file_exists = os.path.exists(filename)
     flight_details = []
     
     with open(filename, 'a', newline='', encoding='utf-8') as f:
         writer = csv.writer(f)
         if not file_exists:
             writer.writerow(headers)
+            
         for flight in flights:
-            leg = flight['legs'][0]
-            segment = leg['segments'][0]
-            flight_num = segment.get('flightNumber', 'N/A')
-            carrier = segment.get('marketingCarrier', {}).get('name', 'N/A')
-            date = leg.get('departure', 'N/A').split('T')[0]
-            dep_time = leg.get('departure', 'N/A').split('T')[1] if 'T' in leg.get('departure', 'N/A') else 'N/A'
-            arr_time = leg.get('arrival', 'N/A').split('T')[1] if 'T' in leg.get('arrival', 'N/A') else 'N/A'
-            price_str = flight.get('price', {}).get('formatted', 'N/A')
-            price = float(price_str.replace('$', '').replace(',', '')) if price_str != 'N/A' else float('inf')
-            writer.writerow([flight_num, carrier, date, dep_time, arr_time, price_str])
-            flight_details.append({'date': date, 'price': price})
+            # Extract price as a numeric value
+            price_str = flight.get('price', 'N/A')
+            if price_str != 'N/A':
+                try:
+                    price = float(price_str.replace('$', '').replace(',', ''))
+                except ValueError:
+                    price = float('inf')
+            else:
+                price = float('inf')
+            
+            # Format layovers as a single string
+            layovers = ', '.join(flight.get('layovers', []))
+            
+            # Write flight data to CSV
+            writer.writerow([
+                flight.get('airline', 'Unknown'),
+                price_str,
+                flight.get('duration', 'N/A'),
+                flight.get('departure_date', 'N/A'),
+                flight.get('departure_time', 'N/A'),
+                flight.get('arrival_date', 'N/A'),
+                flight.get('arrival_time', 'N/A'),
+                flight.get('origin_airport', 'N/A'),
+                flight.get('destination_airport', 'N/A'),
+                layovers
+            ])
+            
+            # Add to flight details for return
+            flight_details.append({
+                'airline': flight.get('airline', 'Unknown'),
+                'price': price,
+                'date': flight.get('departure_date', 'N/A')
+            })
+    
     return flight_details
 
-# --- Amadeus Functions ---
-def get_amadeus_access_token():
-    """Get access token from Amadeus API."""
-    payload = {'grant_type': 'client_credentials', 'client_id': AMADEUS_API_KEY, 'client_secret': AMADEUS_API_SECRET}
-    headers = {'Content-Type': 'application/x-www-form-urlencoded'}
+def save_serpapi_response_to_csv(serpapi_data, filename="serpapi_raw_response.csv"):
+    """
+    Save the raw SerpAPI response data to a CSV file for further analysis.
+    Focus on price and flight details for comparison.
+    
+    Args:
+        serpapi_data (dict): Raw API response from SerpAPI
+        filename (str, optional): Output filename. Defaults to "serpapi_raw_response.csv".
+        
+    Returns:
+        str: Path to the saved CSV file
+    """
+    if not serpapi_data:
+        print("No data to save")
+        return None
+    
+    # Prepare data for CSV
+    rows = []
+    
+    # Extract price insights if available
+    price_insights = serpapi_data.get("price_insights", {})
+    lowest_price = price_insights.get("lowest_price")
+    price_level = price_insights.get("price_level")
+    typical_price_range = price_insights.get("typical_price_range", [])
+    
+    # Process best flights
+    best_flights = serpapi_data.get("best_flights", [])
+    for flight in best_flights:
+        # Get airline from first flight segment if available
+        airline = "Unknown"
+        flight_segments = flight.get('flights', [])
+        if flight_segments and len(flight_segments) > 0:
+            airline = flight_segments[0].get('airline', 'Unknown')
+            
+        row = {
+            'flight_type': 'best_flight',
+            'airline': airline,
+            'price': flight.get('price', 'N/A'),
+            'is_lowest_price': 'Yes' if flight.get('price') == lowest_price else 'No',
+            'price_level': price_level if flight.get('price') == lowest_price else 'N/A',
+            'typical_price_min': typical_price_range[0] if typical_price_range else 'N/A',
+            'typical_price_max': typical_price_range[1] if typical_price_range else 'N/A',
+            'total_duration_minutes': flight.get('total_duration', 0),
+            'num_layovers': len(flight.get('layovers', [])),
+            'booking_token': flight.get('booking_token', 'N/A'),
+            'departure_token': flight.get('departure_token', 'N/A'),
+            'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        }
+        
+        # Add flight segments info
+        flight_segments = flight.get('flights', [])
+        if flight_segments:
+            first_segment = flight_segments[0]
+            departure_airport = first_segment.get('departure_airport', {})
+            arrival_airport = first_segment.get('arrival_airport', {})
+            
+            row.update({
+                'departure_airport': departure_airport.get('name', 'N/A'),
+                'departure_airport_code': departure_airport.get('id', 'N/A'),
+                'departure_time': departure_airport.get('time', 'N/A'),
+                'arrival_airport': arrival_airport.get('name', 'N/A'),
+                'arrival_airport_code': arrival_airport.get('id', 'N/A'),
+                'arrival_time': arrival_airport.get('time', 'N/A')
+            })
+        
+        rows.append(row)
+    
+    # Process other flights
+    other_flights = serpapi_data.get("other_flights", [])
+    for flight in other_flights:
+        # Get airline from first flight segment if available
+        airline = "Unknown"
+        flight_segments = flight.get('flights', [])
+        if flight_segments and len(flight_segments) > 0:
+            airline = flight_segments[0].get('airline', 'Unknown')
+            
+        row = {
+            'flight_type': 'other_flight',
+            'airline': airline,
+            'price': flight.get('price', 'N/A'),
+            'is_lowest_price': 'Yes' if flight.get('price') == lowest_price else 'No',
+            'price_level': price_level if flight.get('price') == lowest_price else 'N/A',
+            'typical_price_min': typical_price_range[0] if typical_price_range else 'N/A',
+            'typical_price_max': typical_price_range[1] if typical_price_range else 'N/A',
+            'total_duration_minutes': flight.get('total_duration', 0),
+            'num_layovers': len(flight.get('layovers', [])),
+            'booking_token': flight.get('booking_token', 'N/A'),
+            'departure_token': flight.get('departure_token', 'N/A'),
+            'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        }
+        
+        # Add flight segments info
+        flight_segments = flight.get('flights', [])
+        if flight_segments:
+            first_segment = flight_segments[0]
+            departure_airport = first_segment.get('departure_airport', {})
+            arrival_airport = first_segment.get('arrival_airport', {})
+            
+            row.update({
+                'departure_airport': departure_airport.get('name', 'N/A'),
+                'departure_airport_code': departure_airport.get('id', 'N/A'),
+                'departure_time': departure_airport.get('time', 'N/A'),
+                'arrival_airport': arrival_airport.get('name', 'N/A'),
+                'arrival_airport_code': arrival_airport.get('id', 'N/A'),
+                'arrival_time': arrival_airport.get('time', 'N/A')
+            })
+        
+        rows.append(row)
+    
+    # Create DataFrame and save to CSV
     try:
-        response = requests.post(AMADEUS_TOKEN_URL, data=payload, headers=headers)
-        response.raise_for_status()
-        return response.json().get('access_token')
-    except requests.exceptions.RequestException as e:
-        print(f"Error getting Amadeus access token: {e}")
+        df = pd.DataFrame(rows)
+        df.to_csv(f'output/{filename}', index=False)
+        print(f"Saved {len(rows)} flights to {filename}")
+        return filename
+    except Exception as e:
+        print(f"Error saving to CSV: {str(e)}")
         return None
 
-def get_price_metrics(access_token, origin, destination, departure_date, currency='EUR', one_way=False):
-    """Fetch price metrics from Amadeus API."""
-    params = {
-        'originIataCode': origin, 'destinationIataCode': destination, 'departureDate': departure_date,
-        'currencyCode': currency, 'oneWay': str(one_way).lower()
-    }
-    headers = {'Authorization': f'Bearer {access_token}'}
-    try:
-        response = requests.get(AMADEUS_API_URL, headers=headers, params=params)
-        response.raise_for_status()
-        data = response.json()
-        return data
-    except requests.exceptions.RequestException as e:
-        print(f"Amadeus API Error for {departure_date}: {e}")
-        return None
+# --- Main Flight Search Functions ---
+def search_flights(origin, destination, departure_date, return_date=None):
+    """
+    Search for flights using SerpAPI Google Flights.
+    
+    Args:
+        origin (str): IATA code of origin airport
+        destination (str): IATA code of destination airport
+        departure_date (str or datetime): Departure date
+        return_date (str or datetime, optional): Return date for round trips
+        
+    Returns:
+        dict: Raw API response with flight data
+    """
+    print(f"Searching flights from {origin} to {destination}")
+    
+    return fetch_flights_serpapi(origin, destination, departure_date, return_date)
 
-def save_price_trends_to_csv(data, filename="price_trends.csv"):
-    """Save Amadeus price metrics to a CSV file."""
-    if not data or 'data' not in data or not data['data']:
-        print("No price trend data to export.")
-        return
+def format_flight_results(api_response):
+    """
+    Format flight search results from SerpAPI into a standardized format.
     
-    metrics = data['data'][0]['priceMetrics']
-    currency = data['data'][0]['currencyCode']
-    origin = data['data'][0]['origin']['iataCode']
-    destination = data['data'][0]['destination']['iataCode']
-    departure_date = data['data'][0]['departureDate']
+    Args:
+        api_response (dict): Raw API response
+        
+    Returns:
+        list: List of formatted flight dictionaries
+    """
+    # Always use SerpAPI formatting
+    return format_serpapi_results(api_response)
+
+def fetch_flights(origin_code, dest_code, depart_date, return_date=None):
+    """
+    Fetch flight data and return formatted results using SerpAPI.
     
-    headers = ["Flight Route", "Departure Date", "Price Metric", f"Price ({currency})"]
-    row = [
-        f"{origin} to {destination}", departure_date,
-        f"Minimum: {next(m['amount'] for m in metrics if m['quartileRanking'] == 'MINIMUM')}, "
-        f"Q1: {next(m['amount'] for m in metrics if m['quartileRanking'] == 'FIRST')}, "
-        f"Median: {next(m['amount'] for m in metrics if m['quartileRanking'] == 'MEDIUM')}, "
-        f"Q3: {next(m['amount'] for m in metrics if m['quartileRanking'] == 'THIRD')}, "
-        f"Maximum: {next(m['amount'] for m in metrics if m['quartileRanking'] == 'MAXIMUM')}"
-    ]
+    Args:
+        origin_code (str): IATA code of origin airport
+        dest_code (str): IATA code of destination airport
+        depart_date (str or datetime): Departure date
+        return_date (str or datetime, optional): Return date for round trips
+        
+    Returns:
+        list: List of formatted flight dictionaries
+    """
+    # Search for flights using SerpAPI
+    api_response = search_flights(origin_code, dest_code, depart_date, return_date)
     
-    file_exists = pd.io.common.file_exists(filename)
-    with open(filename, 'a', newline='', encoding='utf-8') as f:
-        writer = csv.writer(f)
-        if not file_exists:
-            writer.writerow(headers)
-        writer.writerow([row[0], row[1], row[2]])
+    # Format the results
+    formatted_flights = format_flight_results(api_response)
+    
+    return formatted_flights
 
 # --- Date Sampling and Cheapest Flights ---
 def generate_sample_dates(start_date, months=6, samples_per_month=8):
@@ -164,7 +451,7 @@ def generate_sample_dates(start_date, months=6, samples_per_month=8):
     return dates
 
 def get_cheapest_dates(flight_details, num_dates=5):
-    """Identify the 5 cheapest dates from FlightLabs data."""
+    """Identify the 5 cheapest dates from flight data."""
     date_prices = {}
     for detail in flight_details:
         date = detail['date']
@@ -185,47 +472,42 @@ def main():
     
     start_date = datetime.today()
     sample_dates = generate_sample_dates(start_date)
-    print(f"\nSampling {len(sample_dates)} dates over the next 6 months...")
     
-    # --- FlightLabs Section ---
-    print(f"\nFetching FlightLabs airport IDs for {origin_iata} and {destination_iata}...")
-    origin_sky_id, origin_entity_id = get_airport_ids(origin_iata)
-    dest_sky_id, dest_entity_id = get_airport_ids(destination_iata)
-    
-    if not all([origin_sky_id, origin_entity_id, dest_sky_id, dest_entity_id]):
-        print("Failed to retrieve FlightLabs airport IDs. Exiting.")
-        return
-    
-    print(f"FlightLabs Origin: {origin_sky_id} ({origin_entity_id}), Destination: {dest_sky_id} ({dest_entity_id})")
+    print(f"Fetching flights from {origin_iata} to {destination_iata} for {len(sample_dates)} sample dates...")
     
     all_flight_details = []
     for dept_date in sample_dates:
-        print(f"Fetching FlightLabs flights for {origin_iata} to {destination_iata} on {dept_date}...")
-        flights = fetch_flights(origin_sky_id, dest_sky_id, origin_entity_id, dest_entity_id, dept_date)
+        print(f"Fetching flights for {origin_iata} to {destination_iata} on {dept_date}...")
+        flights = fetch_flights(origin_iata, destination_iata, dept_date)
         if flights:
-            flight_details = save_flights_to_csv(flights)
+            flight_details = save_serpapi_flights_to_csv(flights)
             all_flight_details.extend(flight_details)
-            print(f"Saved {len(flights)} FlightLabs flights for {dept_date}")
     
-    if all_flight_details:
-        cheapest_dates = get_cheapest_dates(all_flight_details)
-        print(f"\nCheapest dates identified: {cheapest_dates}")
-    else:
-        print("No flight data collected. Skipping Amadeus section.")
-        return
+    cheapest_dates = get_cheapest_dates(all_flight_details)
     
-    # --- Amadeus Section ---
-    print("\nFetching Amadeus price trends for 5 cheapest dates...")
     access_token = get_amadeus_access_token()
-    if not access_token:
-        print("Failed to authenticate with Amadeus API. Skipping Amadeus data.")
-    else:
-        for dept_date in cheapest_dates:
-            print(f"Fetching Amadeus price metrics for {origin_iata} to {destination_iata} on {dept_date}...")
-            price_data = get_price_metrics(access_token, origin_iata, destination_iata, dept_date)
-            if price_data:
-                save_price_trends_to_csv(price_data)
-                print(f"Saved Amadeus price trends for {dept_date}")
+    
+    if access_token and cheapest_dates:
+        print("\nFetching price trends for the 5 cheapest dates...")
+        for date_info in cheapest_dates:
+            date_str = date_info['date']
+            price = date_info['price']
+            print(f"Date: {date_str}, Price: ${price:.2f}")
+            
+            price_metrics = get_price_metrics(
+                access_token, 
+                origin_iata, 
+                destination_iata, 
+                date_str
+            )
+            
+            if price_metrics:
+                save_price_trends_to_csv(price_metrics)
+                print(f"Price trends for {date_str} saved to price_trends.csv")
+            else:
+                print(f"No price trends available for {date_str}")
+    
+    print("\nDone! Check flights.csv and price_trends.csv for results.")
 
 if __name__ == "__main__":
     main()

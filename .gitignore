@@ -1,0 +1,28 @@
+# Ignorar pasta docs_scraper
+docs_scraper/
+
+# Ignorar arquivo de análise de código
+code_analysis.md
+
+# Ignorar arquivos de cache Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Ignorar ambiente virtual
+venv/
+env/
+.env
+
+# Ignorar arquivos de configuração IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Ignorar arquivos de sistema
+.DS_Store
+Thumbs.db
+
+# Ignorar arquivos de log
+*.log
