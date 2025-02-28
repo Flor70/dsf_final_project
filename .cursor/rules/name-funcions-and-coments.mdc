@@ -1,0 +1,11 @@
+---
+description: todos os comentários e nomes de função devem ser escritos em inglês
+globs: 
+alwaysApply: false
+---
+
+# Your rule content
+
+- todos os comentários e nomes de função geradas devem ser escritos em inglês
+
+- A interface deve ser em inglês

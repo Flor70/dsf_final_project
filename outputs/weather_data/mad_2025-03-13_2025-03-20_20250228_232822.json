@@ -1,0 +1,38 @@
+{
+  "city": "Mad",
+  "data_source": "Open-Meteo Historical Weather API",
+  "analysis_date": "2025-02-28",
+  "years_analyzed": 5,
+  "total_days_analyzed": 40,
+  "temperature": {
+    "max": {
+      "average": 17.5,
+      "highest": 24.3,
+      "lowest": 10.5,
+      "std_dev": 3.6
+    },
+    "min": {
+      "average": 6.0,
+      "highest": 10.5,
+      "lowest": 0.7,
+      "std_dev": 2.4
+    }
+  },
+  "precipitation": {
+    "average_daily": 1.1,
+    "max_daily": 13.4,
+    "total": 44.1,
+    "rainy_days": 14,
+    "rainy_days_percentage": 35.0
+  },
+  "monthly_breakdown": [
+    {
+      "month": "March",
+      "days_with_data": 40,
+      "temperature_max_avg": 17.5,
+      "temperature_min_avg": 6.0,
+      "precipitation_avg": 1.1,
+      "rainy_days_percentage": 35.0
+    }
+  ]
+}
