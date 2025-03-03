@@ -13,6 +13,8 @@ import time
 import os
 import sys
 import json
+# Import Amadeus functions
+from amadeus import get_amadeus_access_token, get_price_metrics, save_price_trends_to_csv, save_price_trends_to_json, clear_amadeus_data_directory
 
 # Add the parent directory to sys.path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -148,6 +150,9 @@ def display_flight_results(flights):
                     st.write(f"- {layover}")
 
 
+
+
+
 def main():
     st.title("✈️ Flight Search")
 
@@ -272,6 +277,67 @@ def main():
                         st.subheader(
                             "🌤️ Weather Forecast Based on Historical Data")
                         display_weather_data()
+
+
+                        # Clear amadeus data directory
+                        amadeus_data_dir = clear_amadeus_data_directory()
+
+                        # Get access token
+                        access_token = get_amadeus_access_token()
+                        if access_token:
+                            # Get price metrics for each weekend
+                            all_results = []
+
+                            # If no weekends found, use original dates
+                            if not weekends:
+                                departure_str = departure_date.strftime(
+                                    '%Y-%m-%d')
+                                data = get_price_metrics(
+                                    access_token, origin, destination, departure_str)
+                                if data and 'data' in data and data['data']:
+                                    all_results.append(data)
+                                    # Save individual date results
+                                    date_filename = f"{amadeus_data_dir}/{origin}_{destination}_{departure_str}.json"
+                                    save_price_trends_to_json(
+                                        data, date_filename)
+                                    # Save to CSV
+                                    csv_filename = f"{amadeus_data_dir}/price_trends.csv"
+                                    save_price_trends_to_csv(
+                                        data, csv_filename)
+                            else:
+                                # For each weekend, get price metrics
+                                for weekend in weekends:
+                                    departure_str = weekend['departure_date']
+                                    data = get_price_metrics(
+                                        access_token, origin, destination, departure_str)
+                                    if data and 'data' in data and data['data']:
+                                        all_results.append(data)
+                                        # Save individual date results
+                                        date_filename = f"{amadeus_data_dir}/{origin}_{destination}_{departure_str}.json"
+                                        save_price_trends_to_json(
+                                            data, date_filename)
+                                        # Save to CSV
+                                        csv_filename = f"{amadeus_data_dir}/price_trends.csv"
+                                        save_price_trends_to_csv(
+                                            data, csv_filename)
+
+                            # Save all results to a single JSON file
+                            if all_results:
+                                combined_data = {
+                                    "data": [item['data'][0] for item in all_results if 'data' in item and item['data']],
+                                    "meta": all_results[0].get('meta', {}) if all_results else {}
+                                }
+
+                                timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+                                combined_filename = f"{amadeus_data_dir}/{origin}_{destination}_combined_{timestamp}.json"
+                                save_price_trends_to_json(
+                                    combined_data, combined_filename)
+
+                                print(
+                                    f"All price trends saved to {combined_filename}")
+                            else:
+                                print(
+                                    "No price trend data was retrieved from Amadeus API.")
 
                 except Exception as e:
                     st.warning(f"Could not process flight data: {str(e)}")
