@@ -250,8 +250,6 @@ def main():
                     save_cheapest_flights_json(
                         raw_data_dir, cheapest_flights_dir, 3)
 
-                    display_cheapest_flights()
-
                     # Display weather data for destination
                     if destination:
                         # Extract destination city name from the airport code
@@ -270,11 +268,6 @@ def main():
                         csv_path = save_weather_data_to_csv(
                             destination_city, start_date, end_date)
                         weather_stats = aggregate_weather_data(csv_path)
-
-                        # Display weather data using the new function
-                        st.subheader(
-                            "🌤️ Weather Forecast Based on Historical Data")
-                        display_weather_data()
 
                         # Clear amadeus data directory
                         amadeus_data_dir = clear_amadeus_data_directory()
@@ -343,27 +336,9 @@ def main():
                 except Exception as e:
                     st.warning(f"Could not process flight data: {str(e)}")
 
-                # Save the search to history
-                if 'search_history' not in st.session_state:
-                    st.session_state.search_history = []
-
-                st.session_state.search_history.append({
-                    'origin': origin,
-                    'destination': destination,
-                    'departure_date': departure_date.strftime('%Y-%m-%d'),
-                    'return_date': return_date.strftime('%Y-%m-%d') if return_date else None,
-                    'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-                })
-
             except Exception as e:
                 st.error(
                     f"An error occurred while searching for flights: {str(e)}")
-
-    # Display search history
-    if 'search_history' in st.session_state and st.session_state.search_history:
-        with st.expander("Search History"):
-            history_df = pd.DataFrame(st.session_state.search_history)
-            st.dataframe(history_df)
 
 
 if __name__ == "__main__":
