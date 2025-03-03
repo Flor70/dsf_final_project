@@ -441,130 +441,6 @@ def display_integrated_view():
                 st.markdown("---")
 
 
-def display_weekend_comparison(weather_df: pd.DataFrame, amadeus_data: Dict[str, Any],
-                               weekends: Dict[str, List[Dict[str, Any]]]):
-    """
-    Display a comparison of different weekends.
-
-    Args:
-        weather_df (pd.DataFrame): Weather data DataFrame
-        amadeus_data (Dict[str, Any]): Amadeus price data
-        weekends (Dict[str, List[Dict[str, Any]]]): Flights organized by weekend
-    """
-    st.header("🔍 Weekend Comparison")
-
-    if not weekends:
-        st.warning("No weekend data available for comparison.")
-        return
-
-    # Prepare data for comparison
-    comparison_data = []
-
-    for date, flights in weekends.items():
-        if not flights:
-            continue
-
-        # Get cheapest flight for this weekend
-        cheapest_flight = min(
-            flights, key=lambda x: x.get('price', float('inf')))
-        price = cheapest_flight.get('price', 0)
-
-        # Get weather data
-        date_weather = get_weather_for_date(weather_df, date)
-        max_temp = date_weather.get('temperature_max', {}).get('average', 0)
-        min_temp = date_weather.get('temperature_min', {}).get('average', 0)
-        precip = date_weather.get('precipitation', {}).get('average', 0)
-
-        # Get price metrics
-        price_metrics = get_price_metrics_for_date(amadeus_data, date)
-        metrics = price_metrics.get('metrics', {})
-        median_price = metrics.get('medium', 0)
-
-        comparison_data.append({
-            'date': date,
-            'price': price,
-            'max_temp': max_temp,
-            'min_temp': min_temp,
-            'precipitation': precip,
-            'median_historical': median_price,
-            'price_diff': price - median_price if median_price else 0
-        })
-
-    if not comparison_data:
-        st.warning("No data available for comparison.")
-        return
-
-    # Create comparison table
-    df = pd.DataFrame(comparison_data)
-
-    # Format the table
-    st.dataframe(
-        df.style.format({
-            'price': '${:.2f}',
-            'max_temp': '{:.1f}°C',
-            'min_temp': '{:.1f}°C',
-            'precipitation': '{:.1f} mm',
-            'median_historical': '${:.2f}',
-            'price_diff': '${:.2f}'
-        }).background_gradient(subset=['price'], cmap='RdYlGn_r')
-          .background_gradient(subset=['max_temp'], cmap='RdYlGn')
-          .background_gradient(subset=['precipitation'], cmap='RdYlGn_r')
-          .background_gradient(subset=['price_diff'], cmap='RdYlGn_r')
-    )
-
-    # Create visualization
-    st.subheader("📈 Visual Comparison")
-
-    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(
-        10, 10), gridspec_kw={'height_ratios': [1, 1]})
-
-    # Price comparison
-    dates = [d['date'] for d in comparison_data]
-    prices = [d['price'] for d in comparison_data]
-    historical = [d['median_historical'] for d in comparison_data]
-
-    x = range(len(dates))
-    width = 0.35
-
-    ax1.bar([i - width/2 for i in x], prices, width,
-            label='Current Price', color='blue', alpha=0.7)
-    ax1.bar([i + width/2 for i in x], historical, width,
-            label='Historical Median', color='orange', alpha=0.7)
-
-    ax1.set_ylabel('Price (USD)')
-    ax1.set_title('Price Comparison by Weekend')
-    ax1.set_xticks(x)
-    ax1.set_xticklabels(dates)
-    ax1.legend()
-
-    # Weather comparison
-    max_temps = [d['max_temp'] for d in comparison_data]
-    min_temps = [d['min_temp'] for d in comparison_data]
-    precip = [d['precipitation'] for d in comparison_data]
-
-    ax2.bar(x, max_temps, width, label='Max Temp (°C)', color='red', alpha=0.7)
-    ax2.bar(x, min_temps, width, label='Min Temp (°C)',
-            color='blue', alpha=0.7, bottom=0)
-
-    # Create a twin axis for precipitation
-    ax3 = ax2.twinx()
-    ax3.plot(x, precip, 'o-', color='green', label='Precipitation (mm)')
-    ax3.set_ylabel('Precipitation (mm)', color='green')
-
-    ax2.set_ylabel('Temperature (°C)')
-    ax2.set_title('Weather Comparison by Weekend')
-    ax2.set_xticks(x)
-    ax2.set_xticklabels(dates)
-
-    # Combine legends
-    lines1, labels1 = ax2.get_legend_handles_labels()
-    lines2, labels2 = ax3.get_legend_handles_labels()
-    ax2.legend(lines1 + lines2, labels1 + labels2, loc='upper right')
-
-    plt.tight_layout()
-    st.pyplot(fig)
-
-
 def display_integrated_dashboard():
     """
     Display the main integrated dashboard.
@@ -589,14 +465,8 @@ def display_integrated_dashboard():
     # Organize flights by weekend
     weekends = organize_flights_by_weekend(flights)
 
-    # Create tabs
-    tab1, tab2 = st.tabs(["Detailed View", "Weekend Comparison"])
-
-    with tab1:
-        display_integrated_view()
-
-    with tab2:
-        display_weekend_comparison(weather_df, amadeus_data, weekends)
+    # Display the integrated view directly without tabs
+    display_integrated_view()
 
 
 if __name__ == "__main__":
