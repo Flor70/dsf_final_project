@@ -77,7 +77,14 @@ st.markdown("""
 
 
 def main():
-    st.title("✈️ Flight Search")
+    st.title("✈️ Weekend Flights Search")
+    st.markdown("""
+    ## How to use this app
+    - Select the origin and destination airports
+    - Select the departure and return dates
+    - The app will display the cheapest flights for the weekends between the selected dates
+    - The app will also display the weather data for the selected destination and the price trends for the selected origin and destination
+    """)
 
     # Initialize session state for airports if not exists
     if 'origin' not in st.session_state:
