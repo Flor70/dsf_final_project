@@ -1,0 +1,45 @@
+{
+    "data": [
+        {
+            "type": "itinerary-price-metric",
+            "origin": {
+                "iataCode": "BCN"
+            },
+            "destination": {
+                "iataCode": "MAD"
+            },
+            "departureDate": "2025-03-14",
+            "transportType": "FLIGHT",
+            "currencyCode": "USD",
+            "oneWay": false,
+            "priceMetrics": [
+                {
+                    "amount": "44.16",
+                    "quartileRanking": "MINIMUM"
+                },
+                {
+                    "amount": "202.31",
+                    "quartileRanking": "FIRST"
+                },
+                {
+                    "amount": "261.71",
+                    "quartileRanking": "MEDIUM"
+                },
+                {
+                    "amount": "317.10",
+                    "quartileRanking": "THIRD"
+                },
+                {
+                    "amount": "458.49",
+                    "quartileRanking": "MAXIMUM"
+                }
+            ]
+        }
+    ],
+    "meta": {
+        "count": 1,
+        "links": {
+            "self": "https://test.api.amadeus.com/v1/analytics/flight-price-metrics?originIataCode=BCN&destinationIataCode=MAD&departureDate=2025-03-14&currencyCode=USD&oneWay=False"
+        }
+    }
+}

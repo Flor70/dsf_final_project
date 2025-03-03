@@ -1,7 +1,6 @@
 from utils.weather_data_processor import save_weather_data_to_csv, aggregate_weather_data
-from utils.flight_data_processor import merge_weekend_flight_data, save_cheapest_flights_json
-from utils.cheapest_flights_display import display_cheapest_flights
-from utils.weather_display import display_weather_data, clear_weather_data_directory
+from utils.flight_data_processor import save_cheapest_flights_json
+from utils.weather_display import clear_weather_data_directory
 from utils.integrated_view import display_integrated_dashboard
 import utils.date_utils as date_utils
 from flights import fetch_flights_serpapi
@@ -20,16 +19,6 @@ from amadeus import get_amadeus_access_token, get_price_metrics, save_price_tren
 # Add the parent directory to sys.path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-# Import components
-
-
-# Import flight search functions
-
-# Import date utils
-
-# Import flight data processor
-
-# Import weather data processor
 
 # Set page config
 st.set_page_config(
@@ -85,70 +74,6 @@ st.markdown("""
     }
 </style>
 """, unsafe_allow_html=True)
-
-
-def display_flight_results(flights):
-    """
-    Display flight search results in a formatted way, with focus on price information.
-
-    Args:
-        flights (list): List of formatted flight dictionaries
-    """
-    if not flights:
-        st.warning("No flights found for the selected route and dates.")
-        return
-
-    st.subheader("Flight Search Results")
-    st.write(f"Found {len(flights)} flights")
-
-    # Display price insights if available
-    if flights and flights[0].get('typical_price_range'):
-        typical_range = flights[0]['typical_price_range']
-        st.info(
-            f"💰 Typical price range for this route: ${typical_range[0]} - ${typical_range[1]}")
-
-    # Display flights in a nice format
-    for i, flight in enumerate(flights):
-        # Format price display
-        price_str = f"${flight.get('price', 'N/A')}"
-        if flight.get('price_level'):
-            price_str += f" ({flight.get('price_level', '')})"
-
-        # Create expander title with price highlight
-        expander_title = f"Flight {i+1}: {flight.get('airline', 'Unknown')} - {price_str}"
-        if flight.get('is_best_flight'):
-            expander_title += " ⭐"
-
-        with st.expander(expander_title):
-            col1, col2 = st.columns(2)
-
-            with col1:
-                st.write("**Departure:**")
-                st.write(f"Time: {flight.get('departure_time', 'N/A')}")
-                st.write(f"Airport: {flight.get('origin_airport', 'N/A')}")
-
-            with col2:
-                st.write("**Arrival:**")
-                st.write(f"Time: {flight.get('arrival_time', 'N/A')}")
-                st.write(
-                    f"Airport: {flight.get('destination_airport', 'N/A')}")
-
-            st.write(f"**Duration:** {flight.get('duration', 'N/A')}")
-
-            # Display price information with more details
-            st.write("**Price Information:**")
-            st.write(f"Price: {price_str}")
-            if flight.get('typical_price_range'):
-                typical_range = flight.get('typical_price_range')
-                st.write(
-                    f"Typical price range: ${typical_range[0]} - ${typical_range[1]}")
-
-            st.write(f"**Airline:** {flight.get('airline', 'N/A')}")
-
-            if flight.get('layovers') and len(flight['layovers']) > 0:
-                st.write("**Layovers:**")
-                for layover in flight['layovers']:
-                    st.write(f"- {layover}")
 
 
 def main():

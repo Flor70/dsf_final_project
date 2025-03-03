@@ -222,8 +222,7 @@ def save_serpapi_flights_to_csv(flights, filename="serpapi_flights.csv"):
     # Create full file path
     file_path = os.path.join(output_dir, filename)
 
-    headers = ['Airline', 'Price', 'Duration', 'Departure Date', 'Departure Time',
-               'Arrival Date', 'Arrival Time', 'Origin Airport', 'Destination Airport', 'Layovers']
+    headers = ['Airline', 'Price', 'Duration', 'Departure Date', 'Departure Time', 'Arrival Date', 'Arrival Time', 'Origin Airport', 'Destination Airport', 'Layovers']                                                         
 
     file_exists = os.path.exists(file_path)
     flight_details = []

@@ -426,7 +426,7 @@ def display_integrated_view():
                     **Departure:** {flight.get('departure_time', '')}  
                     **Arrival:** {flight.get('arrival_time', '')}
                     
-                    **Duration:** {flight.get('total_duration_minutes', 0) // 60}h {flight.get('total_duration_minutes', 0) % 60}m  
+                    **Duration:** {flight.get('total_duration_minutes', 0) // 60}h {flight.get('total_duration_minutes', 0) % 60}m
                     **Layovers:** {flight.get('num_layovers', 0)}
                     """, unsafe_allow_html=True)
 
@@ -437,11 +437,9 @@ def display_integrated_view():
                         currency = price_metrics.get("currency", "USD")
 
                         st.subheader("💰 Historical Price Range")
-                        st.markdown(f"""
-                        **Minimum:** ${metrics.get('minimum', 'N/A')} {currency}  
-                        **Median:** ${metrics.get('medium', 'N/A')} {currency}  
-                        **Maximum:** ${metrics.get('maximum', 'N/A')} {currency}
-                        """)
+                        st.markdown(f"**Minimum:** ${metrics.get('minimum', 'N/A')} {currency}")
+                        st.markdown(f"**Median:** ${metrics.get('medium', 'N/A')} {currency}")  
+                        st.markdown(f"**Maximum:** ${metrics.get('maximum', 'N/A')} {currency}")
 
                 st.markdown("---")
 

@@ -81,8 +81,7 @@ O projeto segue uma arquitetura modular com os seguintes componentes principais:
 ### Utilitários
 - **`utils/flight_data_processor.py`**: Processamento e análise de dados de voo
 - **`utils/weather_data_processor.py`**: Recuperação e processamento de dados de clima
-- **`utils/cheapest_flights_display.py`**: Visualização dos voos mais baratos
-- **`utils/weather_display.py`**: Visualização de dados históricos de clima
+- **`utils/weather_display.py`**: Utilitário para limpar o diretório de dados de clima
 - **`utils/integrated_view.py`**: Dashboard integrado combinando todos os dados
 
 ### Fluxo de Dados
