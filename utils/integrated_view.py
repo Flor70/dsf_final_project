@@ -383,6 +383,26 @@ def display_integrated_view():
         # Get price metrics for this date
         price_metrics = get_price_metrics_for_date(amadeus_data, date)
 
+        # Display weather data once per weekend
+        if date_weather:
+            with st.container():
+                st.subheader("🌤️ Weather Summary for this Weekend")
+                cols = st.columns([1, 1])
+
+                with cols[0]:
+                    st.markdown(f"""
+                    **Average Max Temp:** {date_weather.get('temperature_max', {}).get('average', 'N/A')}°C  
+                    **Average Min Temp:** {date_weather.get('temperature_min', {}).get('average', 'N/A')}°C  
+                    **Average Precipitation:** {date_weather.get('precipitation', {}).get('average', 'N/A')} mm
+                    """)
+
+                # Historical weather chart
+                with cols[1]:
+                    fig = plot_weather_history(date_weather, date)
+                    st.pyplot(fig)
+
+            st.markdown("---")
+
         # Display each flight in this weekend
         for i, flight in enumerate(date_flights):
             with st.container():
@@ -411,15 +431,6 @@ def display_integrated_view():
                     """, unsafe_allow_html=True)
 
                 with cols[1]:
-                    # Weather summary
-                    if date_weather:
-                        st.subheader("🌤️ Weather Summary")
-                        st.markdown(f"""
-                        **Average Max Temp:** {date_weather.get('temperature_max', {}).get('average', 'N/A')}°C  
-                        **Average Min Temp:** {date_weather.get('temperature_min', {}).get('average', 'N/A')}°C  
-                        **Average Precipitation:** {date_weather.get('precipitation', {}).get('average', 'N/A')} mm
-                        """)
-
                     # Price metrics
                     if price_metrics and "metrics" in price_metrics:
                         metrics = price_metrics["metrics"]
@@ -431,12 +442,6 @@ def display_integrated_view():
                         **Median:** ${metrics.get('medium', 'N/A')} {currency}  
                         **Maximum:** ${metrics.get('maximum', 'N/A')} {currency}
                         """)
-
-                # Historical weather chart
-                if date_weather:
-                    st.subheader("📊 Historical Weather Trends")
-                    fig = plot_weather_history(date_weather, date)
-                    st.pyplot(fig)
 
                 st.markdown("---")
 
