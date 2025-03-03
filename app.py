@@ -2,6 +2,7 @@ from utils.weather_data_processor import save_weather_data_to_csv, aggregate_wea
 from utils.flight_data_processor import merge_weekend_flight_data, save_cheapest_flights_json
 from utils.cheapest_flights_display import display_cheapest_flights
 from utils.weather_display import display_weather_data, clear_weather_data_directory
+from utils.integrated_view import display_integrated_dashboard
 import utils.date_utils as date_utils
 from flights import fetch_flights_serpapi
 from components.date_selector import render_date_selector
@@ -150,9 +151,6 @@ def display_flight_results(flights):
                     st.write(f"- {layover}")
 
 
-
-
-
 def main():
     st.title("✈️ Flight Search")
 
@@ -278,7 +276,6 @@ def main():
                             "🌤️ Weather Forecast Based on Historical Data")
                         display_weather_data()
 
-
                         # Clear amadeus data directory
                         amadeus_data_dir = clear_amadeus_data_directory()
 
@@ -338,6 +335,10 @@ def main():
                             else:
                                 print(
                                     "No price trend data was retrieved from Amadeus API.")
+
+                        # Display integrated dashboard with all data
+                        st.subheader("🔍 Integrated Travel Analysis")
+                        display_integrated_dashboard()
 
                 except Exception as e:
                     st.warning(f"Could not process flight data: {str(e)}")
