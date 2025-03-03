@@ -5,211 +5,192 @@
 ![License](https://img.shields.io/badge/License-MIT-green.svg)
 ![Status](https://img.shields.io/badge/Status-Active-brightgreen.svg)
 
-Uma aplicação Python poderosa para buscar voos e analisar dados históricos de clima, desenvolvida por **Ario**, **Myrthe** e **Floriano**. Este projeto ajuda viajantes a encontrar os voos mais baratos para suas rotas desejadas e fornece informações históricas de clima para um melhor planejamento de viagem.
+A powerful Python application for searching flights and analyzing historical weather data, developed by **Ario**, **Myrthe**, and **Floriano**. This project helps travelers find the cheapest flights for their desired routes and provides historical weather information for better trip planning.
 
 ---
 
-## Visão Geral do Projeto
+## Project Overview
 
-**Flight Search & Weather Analysis** ajuda viajantes a planejar suas viagens:
-1. Encontrando os voos mais baratos entre aeroportos de origem e destino selecionados
-2. Buscando automaticamente voos nos finais de semana entre as datas selecionadas
-3. Fornecendo informações detalhadas de voo (preço, companhia aérea, horários, duração, escalas)
-4. Exibindo dados históricos de clima para a cidade de destino
-5. Mostrando tendências históricas de preços para a rota selecionada
-6. Oferecendo uma visualização integrada de voos, clima e dados de preço
-7. Disponibilizando dados para download e análise adicional
+**Flight Search & Weather Analysis** helps travelers plan their trips by:
+1. Finding the cheapest flights between selected origin and destination airports
+2. Automatically searching for flights on weekends between selected dates
+3. Providing detailed flight information (price, airline, times, duration, layovers)
+4. Displaying historical weather data for the destination city
+5. Showing historical price trends for the selected route
+6. Offering an integrated visualization of flight, weather, and price data
 
-A aplicação salva dados em diretórios organizados:
-- **`outputs/raw_data/`**: Dados brutos de busca de voos do SerpAPI
-- **`outputs/cheapest_flights/`**: Dados processados com os voos mais baratos
-- **`outputs/weather_data/`**: Dados históricos de clima para cidades de destino
-- **`outputs/amadeus_data/`**: Dados históricos de preços da API Amadeus
-
----
-
-## Funcionalidades
-
-### Busca de Voos
-- **Rotas Personalizáveis**: Insira qualquer aeroporto de origem e destino (códigos IATA)
-- **Seleção de Datas**: Escolha datas de partida e retorno
-- **Foco em Finais de Semana**: Busca automaticamente voos nos finais de semana
-- **Opções Mais Baratas**: Exibe os três voos mais baratos encontrados
-- **Informações Detalhadas**: Mostra preço, companhia aérea, horários, duração e escalas
-- **Tabela Comparativa**: Tabela fácil de usar para comparar opções de voo
-- **Dados para Download**: Oferece dados de voo para download em formato JSON
-
-### Análise de Clima
-- **Dados Históricos**: Recupera dados de clima para a cidade de destino
-- **Estatísticas de Temperatura**: Mostra médias de temperaturas máximas e mínimas
-- **Dados de Precipitação**: Exibe padrões de chuva
-- **Detalhamento Mensal**: Visualiza padrões mensais de clima
-- **Comparação Ano a Ano**: Compara dados de clima ao longo dos anos
-- **Dados para Download**: Oferece dados de clima brutos e agregados para download
-
-### Análise de Preços
-- **Tendências Históricas**: Mostra como os preços variam ao longo do tempo
-- **Métricas de Preço**: Exibe preços mínimos, medianos e máximos para a rota
-- **Avaliação de Preço**: Avalia se o preço atual é bom em comparação com dados históricos
-- **Dados da Amadeus**: Utiliza a API Amadeus para obter dados confiáveis de preços
-
-### Visualização Integrada
-- **Dashboard Unificado**: Combina dados de voo, clima e preço em uma única visualização
-- **Organização por Final de Semana**: Agrupa voos por final de semana para fácil comparação
-- **Resumo de Clima por Final de Semana**: Exibe dados de clima uma vez por final de semana
-- **Gráficos Históricos**: Mostra tendências de clima para datas específicas
-- **Avaliação Visual de Preços**: Usa códigos de cores para indicar se os preços são bons ou ruins
-
-### Interface do Usuário
-- **Design Limpo**: Interface Streamlit intuitiva
-- **Layout Responsivo**: Seções bem organizadas
-- **Elementos Interativos**: Experiência de usuário aprimorada
-- **Visualização de Dados**: Gráficos e tabelas para melhor compreensão
-- **Instruções Claras**: Interface em inglês com rótulos úteis
+The application saves data in organized directories:
+- **`outputs/raw_data/`**: Raw flight search data from SerpAPI
+- **`outputs/cheapest_flights/`**: Processed data with the cheapest flights
+- **`outputs/weather_data/`**: Historical weather data for destination cities
+- **`outputs/amadeus_data/`**: Historical price data from the Amadeus API
 
 ---
 
-## Arquitetura do Projeto
+## Features
 
-O projeto segue uma arquitetura modular com os seguintes componentes principais:
+### Flight Search
+- **Customizable Routes**: Enter any origin and destination airport (IATA codes)
+- **Date Selection**: Choose departure and return dates
+- **Weekend Focus**: Automatically searches for flights on weekends
+- **Cheapest Options**: Displays the three cheapest flights found
+- **Detailed Information**: Shows price, airline, times, duration, and layovers
+- **Comparison Table**: Easy-to-use table for comparing flight options
 
-### Módulos Principais
-- **`app.py`**: Ponto de entrada principal e interface Streamlit
-- **`flights.py`**: Funções para buscar dados de voo do SerpAPI
-- **`amadeus.py`**: Integração com a API Amadeus para dados históricos de preços
+### Weather Analysis
+- **Historical Data**: Retrieves weather data for the destination city
+- **Temperature Statistics**: Shows average high and low temperatures
+- **Precipitation Data**: Displays rainfall patterns
+- **Monthly Breakdown**: Visualizes monthly weather patterns
+- **Year-by-Year Comparison**: Compares weather data across years
 
-### Utilitários
-- **`utils/flight_data_processor.py`**: Processamento e análise de dados de voo
-- **`utils/weather_data_processor.py`**: Recuperação e processamento de dados de clima
-- **`utils/weather_display.py`**: Utilitário para limpar o diretório de dados de clima
-- **`utils/integrated_view.py`**: Dashboard integrado combinando todos os dados
+### Price Analysis
+- **Historical Trends**: Shows how prices vary over time
+- **Price Metrics**: Displays minimum, median, and maximum prices for the route
+- **Price Evaluation**: Assesses whether the current price is good compared to historical data
+- **Amadeus Data**: Uses the Amadeus API to obtain reliable price data
 
-### Fluxo de Dados
-1. O usuário insere parâmetros de busca (origem, destino, datas)
-2. A aplicação busca voos usando SerpAPI
-3. Os dados de voo são processados para encontrar os voos mais baratos
-4. Dados históricos de clima são recuperados para o destino
-5. Dados históricos de preços são obtidos da API Amadeus
-6. Todos os dados são combinados em uma visualização integrada
+### Integrated Visualization
+- **Unified Dashboard**: Combines flight, weather, and price data in a single view
+- **Weekend Organization**: Groups flights by weekend for easy comparison
+- **Weather Summary by Weekend**: Displays weather data once per weekend
+- **Historical Charts**: Shows weather trends for specific dates
+- **Visual Price Assessment**: Uses color coding to indicate whether prices are good or bad
 
----
-
-## Detalhes Técnicos
-
-### APIs Utilizadas
-- **SerpAPI**: Para buscar dados de voo de várias fontes
-- **Open-Meteo**: Para dados históricos de clima
-- **Amadeus**: Para tendências históricas de preços
-
-### Processamento de Dados
-- **Pandas**: Usado extensivamente para manipulação e análise de dados
-- **Matplotlib/Seaborn**: Para visualizações de dados
-- **JSON/CSV**: Para armazenamento e intercâmbio de dados
-
-### Visualização
-- **Streamlit**: Framework principal para a interface do usuário
-- **Componentes Personalizados**: Cards, tabelas e gráficos para exibição de dados
-- **Layout Responsivo**: Adaptável a diferentes tamanhos de tela
+### User Interface
+- **Clean Design**: Intuitive Streamlit interface
+- **Responsive Layout**: Well-organized sections
+- **Interactive Elements**: Enhanced user experience
+- **Data Visualization**: Charts and tables for better understanding
+- **Clear Instructions**: English interface with helpful labels
 
 ---
 
-## Pré-requisitos
+## Project Architecture
+
+The project follows a modular architecture with the following main components:
+
+### Main Modules
+- **`app.py`**: Main entry point and Streamlit interface
+- **`flights.py`**: Functions for fetching flight data from SerpAPI
+- **`amadeus.py`**: Integration with the Amadeus API for historical price data
+
+### Utilities
+- **`utils/flight_data_processor.py`**: Processing and analysis of flight data
+- **`utils/weather_data_processor.py`**: Retrieval and processing of weather data
+- **`utils/weather_display.py`**: Utility for clearing the weather data directory
+- **`utils/integrated_view.py`**: Integrated dashboard combining all data
+
+### Data Flow
+1. The user enters search parameters (origin, destination, dates)
+2. The application searches for flights using SerpAPI
+3. Flight data is processed to find the cheapest flights
+4. Historical weather data is retrieved for the destination
+5. Historical price data is obtained from the Amadeus API
+6. All data is combined in an integrated visualization
+
+---
+
+## Technical Details
+
+### APIs Used
+- **SerpAPI**: For fetching flight data from various sources
+- **Open-Meteo**: For historical weather data
+- **Amadeus**: For historical price trends
+
+### Data Processing
+- **Pandas**: Extensively used for data manipulation and analysis
+- **Matplotlib/Seaborn**: For data visualizations
+- **JSON/CSV**: For data storage and exchange
+
+### Visualization
+- **Streamlit**: Main framework for the user interface
+- **Custom Components**: Cards, tables, and charts for data display
+- **Responsive Layout**: Adaptable to different screen sizes
+
+---
+
+## Prerequisites
 
 - **Python 3.8+**
-- **Dependências**: Instale via `pip install -r requirements.txt`
-- **Chaves de API**:
-  - **SerpAPI**: Obtenha sua chave em [serpapi.com](https://serpapi.com)
-  - **Amadeus**: Registre-se em [developers.amadeus.com](https://developers.amadeus.com)
+- **Dependencies**: Install via `pip install -r requirements.txt`
+- **API Keys**:
+  - **SerpAPI**: Get your key at [serpapi.com](https://serpapi.com)
+  - **Amadeus**: Register at [developers.amadeus.com](https://developers.amadeus.com)
 
 ---
 
-## Instalação
+## Installation
 
-1. **Clone o Repositório**:
+1. **Clone the Repository**:
    ```bash
    git clone https://github.com/Flor70/dsf_final_project.git
    cd dsf_final_project
    ```
 
-2. **Instale as Dependências**:
+2. **Install Dependencies**:
    ```bash
    pip install -r requirements.txt
    ```
 
-3. **Configure as Chaves de API**:
-   - Crie um arquivo `.env` na raiz do projeto
-   - Adicione suas chaves de API:
+3. **Configure API Keys**:
+   - Create a `.env` file in the project root
+   - Add your API keys:
      ```
-     SERPAPI_KEY=sua_chave_serpapi
-     AMADEUS_API_KEY=sua_chave_amadeus
-     AMADEUS_API_SECRET=seu_segredo_amadeus
+     SERPAPI_KEY=your_serpapi_key
+     AMADEUS_API_KEY=your_amadeus_key
+     AMADEUS_API_SECRET=your_amadeus_secret
      ```
 
-4. **Execute a Aplicação**:
+4. **Run the Application**:
    ```bash
    streamlit run app.py
    ```
 
 ---
 
-## Guia para Apresentação
+## Presentation Guide
 
-Ao apresentar este projeto, considere destacar os seguintes pontos:
+When presenting this project, consider highlighting the following points:
 
-### 1. Problema e Solução
-- **Problema**: Viajantes frequentemente enfrentam dificuldades para encontrar voos baratos e prever condições climáticas
-- **Solução**: Uma ferramenta integrada que combina busca de voos, análise de clima e tendências de preços
+### 1. Problem and Solution
+- **Problem**: Travelers often face difficulties finding cheap flights and predicting weather conditions
+- **Solution**: An integrated tool that combines flight search, weather analysis, and price trends
 
-### 2. Demonstração do Fluxo de Usuário
-- Mostre como um usuário insere dados de origem, destino e datas
-- Demonstre como a aplicação busca voos nos finais de semana
-- Exiba os resultados de voos mais baratos
-- Mostre a visualização de dados de clima
-- Destaque a visualização integrada
+### 2. User Flow Demonstration
+- Show how a user enters origin, destination, and date data
+- Demonstrate how the application searches for flights on weekends
+- Display the cheapest flight results
+- Show the weather data visualization
+- Highlight the integrated visualization
 
-### 3. Aspectos Técnicos Notáveis
-- Integração de múltiplas APIs (SerpAPI, Open-Meteo, Amadeus)
-- Processamento e análise de dados com Pandas
-- Visualizações interativas com Streamlit
-- Arquitetura modular e extensível
+### 3. Notable Technical Aspects
+- Integration of multiple APIs (SerpAPI, Open-Meteo, Amadeus)
+- Data processing and analysis with Pandas
+- Interactive visualizations with Streamlit
+- Modular and extensible architecture
 
-### 4. Valor para o Usuário
-- Economia de tempo na busca de voos
-- Tomada de decisão informada com base em dados históricos
-- Planejamento de viagem aprimorado com informações de clima
-- Interface intuitiva e fácil de usar
-
----
-
-## Atualizações Recentes
-
-- **Visualização Integrada**: Adicionado dashboard que combina dados de voo, clima e preço
-- **Análise de Clima por Final de Semana**: Melhorada a exibição de dados de clima para mostrar uma vez por final de semana
-- **Integração com Amadeus**: Implementada exibição de tendências históricas de preços
-- **UI Aprimorada**: Interface de usuário redesenhada para melhor experiência
-- **Arquitetura Modular**: Código refatorado para facilitar manutenção e extensão
+### 4. User Value
+- Time savings in flight search
+- Informed decision-making based on historical data
+- Enhanced trip planning with weather information
+- Intuitive and easy-to-use interface
 
 ---
 
-## Melhorias Pendentes
+## Recent Updates
 
-Como detalhado em nosso documento [Project Status](project_status.md), estamos trabalhando em:
+- **Integrated Visualization**: Added dashboard that combines flight, weather, and price data
+- **Weekend Weather Analysis**: Improved weather data display to show once per weekend
+- **Amadeus Integration**: Implemented display of historical price trends
+- **Enhanced UI**: Redesigned user interface for better experience
+- **Modular Architecture**: Refactored code for easier maintenance and extension
 
-1. **Aprimoramento da Visualização de Dados de Clima**: Melhorando gráficos e adicionando informações específicas de clima para finais de semana
-2. **Integração de API de Busca de Voos**: Garantindo recuperação adequada de dados de voos de ida e volta
-3. **Otimização de Desempenho**: Melhorando o tempo de resposta e a eficiência da aplicação
-4. **Melhorias Adicionais**: Melhor tratamento de erros, cache e mais opções de filtragem
 
----
-
-## Contribuidores
+## Contributors
 
 - **Ario**
 - **Myrthe**
 - **Floriano**
 
 ---
-
-## Licença
-
-Este projeto está licenciado sob a Licença MIT - veja o arquivo LICENSE para detalhes.
