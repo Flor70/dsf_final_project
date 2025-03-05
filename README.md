@@ -81,6 +81,13 @@ The project follows a modular architecture with the following main components:
 - **`utils/weather_display.py`**: Utility for clearing the weather data directory
 - **`utils/integrated_view.py`**: Integrated dashboard combining all data
 
+### Components
+- **`components/airport_selector.py`**: Custom component for selecting airports with search functionality
+- **`components/date_selector.py`**: Custom component for selecting dates with validation and range constraints
+
+### Documentation and Data
+- **`docs/airports.csv`**: Database of airports with IATA codes, names, locations, and other metadata
+
 ### Data Flow
 1. The user enters search parameters (origin, destination, dates)
 2. The application searches for flights using SerpAPI
@@ -146,45 +153,6 @@ The project follows a modular architecture with the following main components:
    ```bash
    streamlit run app.py
    ```
-
----
-
-## Presentation Guide
-
-When presenting this project, consider highlighting the following points:
-
-### 1. Problem and Solution
-- **Problem**: Travelers often face difficulties finding cheap flights and predicting weather conditions
-- **Solution**: An integrated tool that combines flight search, weather analysis, and price trends
-
-### 2. User Flow Demonstration
-- Show how a user enters origin, destination, and date data
-- Demonstrate how the application searches for flights on weekends
-- Display the cheapest flight results
-- Show the weather data visualization
-- Highlight the integrated visualization
-
-### 3. Notable Technical Aspects
-- Integration of multiple APIs (SerpAPI, Open-Meteo, Amadeus)
-- Data processing and analysis with Pandas
-- Interactive visualizations with Streamlit
-- Modular and extensible architecture
-
-### 4. User Value
-- Time savings in flight search
-- Informed decision-making based on historical data
-- Enhanced trip planning with weather information
-- Intuitive and easy-to-use interface
-
----
-
-## Recent Updates
-
-- **Integrated Visualization**: Added dashboard that combines flight, weather, and price data
-- **Weekend Weather Analysis**: Improved weather data display to show once per weekend
-- **Amadeus Integration**: Implemented display of historical price trends
-- **Enhanced UI**: Redesigned user interface for better experience
-- **Modular Architecture**: Refactored code for easier maintenance and extension
 
 
 ## Contributors
